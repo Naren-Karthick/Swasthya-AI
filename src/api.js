@@ -1,6 +1,6 @@
 import { GoogleGenAI } from '@google/genai';
 
-const DB_URL = 'https://kvdb.io/3QV8UytSSApqnB7xYUGvn7/users';
+const DB_URL = 'https://api.npoint.io/ead356d4d55965c0a760';
 
 // Initialize Gemini Client
 const GEMINI_API_KEY = import.meta.env.VITE_GEMINI_API_KEY;
@@ -20,17 +20,14 @@ const saveLocalData = (data) => {
 export const fetchUsersDatabase = async () => {
   try {
     const res = await fetch(DB_URL);
-    if (res.status === 404) {
-      // Key does not exist yet on new bucket, return empty structure
-      return { users: [] };
-    }
     if (!res.ok) throw new Error('Failed to fetch from database');
     const data = await res.json();
     if (data && Array.isArray(data.users)) {
       saveLocalData(data); // Sync local
       return data;
     }
-    return getLocalData();
+    // Handle empty bin (e.g. first load)
+    return { users: [] };
   } catch (err) {
     console.warn('Database fetch error, using localStorage fallback:', err);
     return getLocalData();
@@ -42,7 +39,7 @@ export const updateUsersDatabase = async (database) => {
   saveLocalData(database); // Always save local first
   try {
     const res = await fetch(DB_URL, {
-      method: 'PUT', // kvdb uses PUT to overwrite a key
+      method: 'POST', // npoint uses POST to update
       headers: {
         'Content-Type': 'application/json'
       },
