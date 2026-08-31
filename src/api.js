@@ -1,6 +1,6 @@
 import { GoogleGenAI } from '@google/genai';
 
-const NPOINT_URL = 'https://api.npoint.io/9db521ac9ecae5660573';
+const DB_URL = 'https://kvdb.io/3QV8UytSSApqnB7xYUGvn7/users';
 
 // Initialize Gemini Client
 const GEMINI_API_KEY = import.meta.env.VITE_GEMINI_API_KEY;
@@ -19,17 +19,20 @@ const saveLocalData = (data) => {
 // 1. Fetch Users Database
 export const fetchUsersDatabase = async () => {
   try {
-    const res = await fetch(NPOINT_URL);
-    if (!res.ok) throw new Error('Failed to fetch from npoint');
+    const res = await fetch(DB_URL);
+    if (res.status === 404) {
+      // Key does not exist yet on new bucket, return empty structure
+      return { users: [] };
+    }
+    if (!res.ok) throw new Error('Failed to fetch from database');
     const data = await res.json();
-    // Validate schema
     if (data && Array.isArray(data.users)) {
       saveLocalData(data); // Sync local
       return data;
     }
     return getLocalData();
   } catch (err) {
-    console.warn('npoint API error, using localStorage fallback:', err);
+    console.warn('Database fetch error, using localStorage fallback:', err);
     return getLocalData();
   }
 };
@@ -38,27 +41,17 @@ export const fetchUsersDatabase = async () => {
 export const updateUsersDatabase = async (database) => {
   saveLocalData(database); // Always save local first
   try {
-    const res = await fetch(NPOINT_URL, {
-      method: 'POST', // npoint supports POST/PUT to overwrite
+    const res = await fetch(DB_URL, {
+      method: 'PUT', // kvdb uses PUT to overwrite a key
       headers: {
         'Content-Type': 'application/json'
       },
       body: JSON.stringify(database)
     });
-    if (!res.ok) {
-      // Try PUT if POST is not allowed
-      const putRes = await fetch(NPOINT_URL, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(database)
-      });
-      if (!putRes.ok) throw new Error('Failed to update npoint');
-    }
+    if (!res.ok) throw new Error('Failed to update database');
     return true;
   } catch (err) {
-    console.error('Failed to sync to npoint server:', err);
+    console.error('Failed to sync to database server:', err);
     return false;
   }
 };

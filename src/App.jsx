@@ -52,7 +52,9 @@ export default function App() {
 
   // 2. Auth submission handler
   const handleAuthSubmit = async (mode, credentials) => {
-    const updatedUsers = [...usersDb.users];
+    // 1. Fetch fresh DB first to avoid out-of-sync states
+    const freshDb = await fetchUsersDatabase();
+    const updatedUsers = [...freshDb.users];
 
     if (mode === 'signup') {
       // Validate unique email
@@ -72,7 +74,7 @@ export default function App() {
       updatedUsers.push(newUser);
       const newDb = { users: updatedUsers };
       
-      // Save locally & npoint
+      // Save locally & server
       setUsersDb(newDb);
       setUser(newUser);
       localStorage.setItem('swasthya_active_user', JSON.stringify(newUser));
@@ -92,12 +94,14 @@ export default function App() {
         throw new Error('Invalid email or password.');
       }
 
+      // Sync active database cache in state
+      setUsersDb(freshDb);
       setUser(found);
       localStorage.setItem('swasthya_active_user', JSON.stringify(found));
 
       // Retrospective saving of active report if present
       if (currentReport && currentPatientInfo) {
-        await saveReportToUser(found, currentReport, currentPatientInfo, usersDb);
+        await saveReportToUser(found, currentReport, currentPatientInfo, freshDb);
       }
     }
   };
