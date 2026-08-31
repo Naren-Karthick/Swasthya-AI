@@ -228,15 +228,34 @@ export default function SymptomInput({
               <label htmlFor="duration" className="block text-sm font-semibold text-slate-700 mb-1.5">
                 {translations.durationLabel}
               </label>
+              
+              {/* Quick Select Duration Chips */}
+              <div className="flex flex-wrap gap-2 mb-2.5">
+                {[1, 2, 3, 4, 5, 6, 7].map((day) => (
+                  <button
+                    key={day}
+                    type="button"
+                    onClick={() => setDuration(day)}
+                    className={`rounded-lg px-3 py-1.5 text-xs font-bold border transition-all cursor-pointer ${
+                      Number(duration) === day
+                        ? 'bg-emerald-600 border-emerald-600 text-white shadow-sm'
+                        : 'bg-slate-50 border-slate-200 text-slate-600 hover:bg-slate-100'
+                    }`}
+                  >
+                    {day === 7 ? '7+ Days' : `${day} ${day === 1 ? 'Day' : 'Days'}`}
+                  </button>
+                ))}
+              </div>
+
               <input
                 id="duration"
                 type="number"
                 min="0"
                 max="365"
-                placeholder="e.g. 3"
+                placeholder="Or type custom number of days..."
                 value={duration}
                 onChange={(e) => setDuration(e.target.value)}
-                className="w-full rounded-xl border border-slate-200 p-3 text-slate-800 focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500"
+                className="w-full rounded-xl border border-slate-200 p-3 text-slate-800 focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500 text-sm"
               />
             </div>
           </div>
