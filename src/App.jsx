@@ -233,6 +233,7 @@ export default function App() {
         activeTab={activeTab}
         setActiveTab={setActiveTab}
         currentLanguage={currentLanguage}
+        onOpenLanguage={() => setShowLanguageSelector(true)}
         translations={translations}
       />
 
@@ -277,11 +278,11 @@ export default function App() {
       </main>
 
       {/* Footer */}
-      <footer className="border-t border-slate-200 bg-white py-6">
-        <div className="mx-auto max-w-7xl px-4 text-center text-xs text-slate-500">
-          <p>© {new Date().getFullYear()} SwasthyaAI. All rights reserved.</p>
-          <p className="mt-1">
-            Built as a professional medical triage prototype. Rely on certified healthcare professionals for diagnoses.
+      <footer className="border-t border-slate-200 bg-white/70 backdrop-blur-md py-8">
+        <div className="mx-auto max-w-7xl px-4 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-slate-500">
+          <p>© {new Date().getFullYear()} SwasthyaAI. Intelligent Medical Triage.</p>
+          <p className="max-w-md text-center sm:text-right">
+            Prototypes are for guidance only. Consult a certified medical doctor for clinical emergencies.
           </p>
         </div>
       </footer>

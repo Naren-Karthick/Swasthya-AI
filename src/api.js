@@ -80,53 +80,70 @@ Symptom Duration: ${durationDays ? durationDays + ' days' : 'Not provided'}
 
 Perform clinical triage. Provide translation of all clinical reports, assessments, and recommended actions in ${targetLanguage}.`;
 
-  try {
-    const response = await ai.models.generateContent({
-      model: 'gemini-3.6-flash',
-      contents: prompt,
-      config: {
-        systemInstruction: systemPrompt,
-        responseMimeType: 'application/json',
-        responseSchema: {
-          type: 'OBJECT',
-          properties: {
-            isEmergency: { type: 'BOOLEAN' },
-            urgencyLevel: { type: 'STRING', enum: ['EMERGENCY', 'MODERATE', 'LOW'] },
-            clinicalTerms: {
-              type: 'ARRAY',
-              items: { type: 'STRING' },
-              description: 'Standardized clinical/medical terms associated with the symptoms'
-            },
-            primaryAssessment: {
-              type: 'STRING',
-              description: 'Concise medical assessment summarizing the potential condition in the target language'
-            },
-            contributingFactors: {
-              type: 'ARRAY',
-              items: { type: 'STRING' },
-              description: 'Potential causes or contributing factors in the target language'
-            },
-            recommendedAction: {
-              type: 'STRING',
-              description: 'Clear directive (e.g., go to emergency, book appointment, home care) in the target language'
-            }
-          },
-          required: ['isEmergency', 'urgencyLevel', 'clinicalTerms', 'primaryAssessment', 'contributingFactors', 'recommendedAction']
-        }
-      }
-    });
+  // Candidate models in priority order with fallback
+  const models = [
+    'gemini-3.5-flash',
+    'gemini-3.6-flash',
+    'gemini-3.7-flash',
+    'gemini-3.1-flash-lite',
+    'gemini-3.8-flash'
+  ];
 
-    const responseText = response.text || response.candidates?.[0]?.content?.parts?.[0]?.text;
-    if (!responseText) throw new Error('Empty response from Gemini');
-    
-    let cleanText = responseText.trim();
-    if (cleanText.startsWith('```')) {
-      cleanText = cleanText.replace(/^```(?:json)?\n?/, '').replace(/\n?```$/, '').trim();
+  let lastError = null;
+
+  for (const modelName of models) {
+    try {
+      const response = await ai.models.generateContent({
+        model: modelName,
+        contents: prompt,
+        config: {
+          systemInstruction: systemPrompt,
+          responseMimeType: 'application/json',
+          responseSchema: {
+            type: 'OBJECT',
+            properties: {
+              isEmergency: { type: 'BOOLEAN' },
+              urgencyLevel: { type: 'STRING', enum: ['EMERGENCY', 'MODERATE', 'LOW'] },
+              clinicalTerms: {
+                type: 'ARRAY',
+                items: { type: 'STRING' },
+                description: 'Standardized clinical/medical terms associated with the symptoms'
+              },
+              primaryAssessment: {
+                type: 'STRING',
+                description: 'Concise medical assessment summarizing the potential condition in the target language'
+              },
+              contributingFactors: {
+                type: 'ARRAY',
+                items: { type: 'STRING' },
+                description: 'Potential causes or contributing factors in the target language'
+              },
+              recommendedAction: {
+                type: 'STRING',
+                description: 'Clear directive (e.g., go to emergency, book appointment, home care) in the target language'
+              }
+            },
+            required: ['isEmergency', 'urgencyLevel', 'clinicalTerms', 'primaryAssessment', 'contributingFactors', 'recommendedAction']
+          }
+        }
+      });
+
+      const responseText = response.text || response.candidates?.[0]?.content?.parts?.[0]?.text;
+      if (!responseText) throw new Error('Empty response from Gemini');
+      
+      let cleanText = responseText.trim();
+      if (cleanText.startsWith('```')) {
+        cleanText = cleanText.replace(/^```(?:json)?\n?/, '').replace(/\n?```$/, '').trim();
+      }
+      
+      return JSON.parse(cleanText);
+    } catch (err) {
+      console.warn(`Model ${modelName} triage failed, trying fallback:`, err.message);
+      lastError = err;
     }
-    
-    return JSON.parse(cleanText);
-  } catch (err) {
-    console.error('Error calling Gemini API:', err);
-    throw err;
   }
+
+  console.error('All Gemini triage models failed:', lastError);
+  throw lastError || new Error('Diagnostic analysis temporarily unavailable.');
 };
+
