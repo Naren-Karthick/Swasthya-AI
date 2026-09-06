@@ -1,6 +1,17 @@
 import React, { useState, useEffect } from 'react';
-import Navbar from './components/Navbar';
+import Header from './components/Header';
 import LandingHero from './components/LandingHero';
+import TrustSafetyStrip from './components/TrustSafetyStrip';
+import InlineSymptomChecker from './components/InlineSymptomChecker';
+import HowItWorks from './components/HowItWorks';
+import CoreCapabilities from './components/CoreCapabilities';
+import InteractiveTriagePreview from './components/InteractiveTriagePreview';
+import LanguagesShowcase from './components/LanguagesShowcase';
+import SafetySection from './components/SafetySection';
+import FinalCTA from './components/FinalCTA';
+import Footer from './components/Footer';
+
+import LiveVoiceConsultation from './components/LiveVoiceConsultation';
 import LanguageSelector from './components/LanguageSelector';
 import SymptomInput from './components/SymptomInput';
 import TriageReportCard from './components/TriageReportCard';
@@ -12,7 +23,7 @@ import { fetchUsersDatabase, updateUsersDatabase, analyzeSymptoms } from './api'
 import { generateTriagePDF } from './utils/pdfGenerator';
 
 export default function App() {
-  // App States
+  // Application Primary States
   const [currentLanguage, setCurrentLanguage] = useState('en');
   const [user, setUser] = useState(null);
   const [usersDb, setUsersDb] = useState({ users: [] });
@@ -21,6 +32,7 @@ export default function App() {
   // Modals visibility
   const [showLanguageSelector, setShowLanguageSelector] = useState(false);
   const [showAuthModal, setShowAuthModal] = useState(false);
+  const [showLiveVoice, setShowLiveVoice] = useState(false);
 
   // Active diagnostic assessment state
   const [currentReport, setCurrentReport] = useState(null);
@@ -37,13 +49,17 @@ export default function App() {
       
       const savedSession = localStorage.getItem('swasthya_active_user');
       if (savedSession) {
-        const loggedUser = JSON.parse(savedSession);
-        // Cross-reference with db to get fresh reports
-        const freshUser = db.users.find(u => u.email === loggedUser.email);
-        if (freshUser) {
-          setUser(freshUser);
-        } else {
-          setUser(loggedUser);
+        try {
+          const loggedUser = JSON.parse(savedSession);
+          // Cross-reference with db to get fresh reports
+          const freshUser = db.users.find(u => u.email === loggedUser.email);
+          if (freshUser) {
+            setUser(freshUser);
+          } else {
+            setUser(loggedUser);
+          }
+        } catch (e) {
+          console.warn('Session parse error', e);
         }
       }
     };
@@ -52,7 +68,7 @@ export default function App() {
 
   // 2. Auth submission handler
   const handleAuthSubmit = async (mode, credentials) => {
-    // 1. Fetch fresh DB first to avoid out-of-sync states
+    // Fetch fresh DB first to avoid out-of-sync states
     const freshDb = await fetchUsersDatabase();
     const updatedUsers = [...freshDb.users];
 
@@ -64,7 +80,7 @@ export default function App() {
       }
 
       const newUser = {
-        userId: 'USR' + Math.random().toString(36).substr(2, 6).toUpperCase(),
+        userId: 'USR' + Date.now().toString(36).toUpperCase(),
         name: credentials.name,
         email: credentials.email.toLowerCase(),
         password: credentials.password,
@@ -157,34 +173,50 @@ export default function App() {
     try {
       const result = await analyzeSymptoms(symptomsText, currentLanguage, ageGroup, durationDays);
       
+      const languageMap = {
+        en: 'English',
+        ta: 'Tamil',
+        hi: 'Hindi',
+        te: 'Telugu',
+        kn: 'Kannada',
+        ml: 'Malayalam',
+        bn: 'Bengali',
+        mr: 'Marathi'
+      };
+
       const patientInfo = {
         id: 'SES' + Math.random().toString(36).substr(2, 6).toUpperCase(),
         symptoms: symptomsText,
         ageGroup: ageGroup || 'N/A',
         duration: durationDays || 'N/A',
-        language: currentLanguage === 'en' ? 'English' : 
-                  currentLanguage === 'ta' ? 'Tamil' : 
-                  currentLanguage === 'hi' ? 'Hindi' : 
-                  currentLanguage === 'te' ? 'Telugu' : 
-                  currentLanguage === 'kn' ? 'Kannada' : 
-                  currentLanguage === 'ml' ? 'Malayalam' : 
-                  currentLanguage === 'bn' ? 'Bengali' : 'Marathi',
+        language: languageMap[currentLanguage] || 'English',
         date: new Date().toISOString()
       };
 
       setCurrentReport(result);
       setCurrentPatientInfo(patientInfo);
-      setActiveTab('report');
 
       // Auto-save if logged in
       if (user) {
         await saveReportToUser(user, result, patientInfo, usersDb);
       }
     } catch (err) {
+      console.error('Analysis error:', err);
       alert('An error occurred during clinical analysis. Please try again.');
     } finally {
       setLoading(false);
     }
+  };
+
+  // 5. Completion callback from Live Voice Consultation
+  const handleCompleteLiveVoice = async (symptomsText, _fullDialogue) => {
+    setShowLiveVoice(false);
+    await handleAnalyzeSymptoms(symptomsText, 'Adult (from audio intake)', 2);
+    // Smoothly scroll to the symptom assessment result
+    setTimeout(() => {
+      const el = document.getElementById('symptom-checker');
+      if (el) el.scrollIntoView({ behavior: 'smooth' });
+    }, 100);
   };
 
   const handleDownloadPdf = () => {
@@ -220,13 +252,27 @@ export default function App() {
       language: savedRecord.language,
       date: savedRecord.date
     });
-    setActiveTab('report');
+    setActiveTab('home');
+    setTimeout(() => {
+      const el = document.getElementById('symptom-checker');
+      if (el) el.scrollIntoView({ behavior: 'smooth' });
+    }, 100);
+  };
+
+  // Scroll to manual symptom entry section on same page
+  const scrollToSymptomChecker = () => {
+    setActiveTab('home');
+    setTimeout(() => {
+      const el = document.getElementById('symptom-checker');
+      if (el) el.scrollIntoView({ behavior: 'smooth' });
+    }, 100);
   };
 
   return (
-    <div className="flex min-h-screen flex-col bg-slate-50 font-sans antialiased">
-      {/* Navigation */}
-      <Navbar
+    <div className="flex min-h-screen flex-col bg-slate-50 font-sans antialiased text-slate-900">
+      
+      {/* Modern Responsive Sticky Header */}
+      <Header
         user={user}
         onLogout={handleLogout}
         onOpenAuth={() => setShowAuthModal(true)}
@@ -234,25 +280,86 @@ export default function App() {
         setActiveTab={setActiveTab}
         currentLanguage={currentLanguage}
         onOpenLanguage={() => setShowLanguageSelector(true)}
+        onStartLiveVoice={() => setShowLiveVoice(true)}
+        onStartTriage={scrollToSymptomChecker}
         translations={translations}
       />
 
-      {/* Main Pages */}
+      {/* Main Content Area */}
       <main className="flex-grow">
         {activeTab === 'home' && (
-          <LandingHero
-            onStart={() => setShowLanguageSelector(true)}
-            translations={translations}
-          />
+          <div>
+            {/* 1. Hero Section with Mock Preview */}
+            <LandingHero
+              onStartTriage={scrollToSymptomChecker}
+              onStartLiveVoice={() => setShowLiveVoice(true)}
+              translations={translations}
+            />
+
+            {/* 2. Trust and Safety Strip */}
+            <TrustSafetyStrip />
+
+            {/* 3. AI SYMPTOM MANUAL ENTRY SECTION DIRECTLY ON THE SAME PAGE */}
+            <InlineSymptomChecker
+              currentLanguage={currentLanguage}
+              onLanguageChange={(code) => setCurrentLanguage(code)}
+              onAnalyze={handleAnalyzeSymptoms}
+              loading={loading}
+              currentReport={currentReport}
+              currentPatientInfo={currentPatientInfo}
+              onDownloadPdf={handleDownloadPdf}
+              onResetReport={() => {
+                setCurrentReport(null);
+                setCurrentPatientInfo(null);
+              }}
+              isLoggedIn={!!user}
+              onOpenAuth={() => setShowAuthModal(true)}
+              onStartLiveVoice={() => setShowLiveVoice(true)}
+              translations={translations}
+            />
+
+            {/* 4. How It Works */}
+            <HowItWorks />
+
+            {/* 5. Core Capabilities */}
+            <CoreCapabilities 
+              onStartLiveVoice={() => setShowLiveVoice(true)}
+              onStartTriage={scrollToSymptomChecker}
+            />
+
+            {/* 6. Interactive Triage Preview Simulation */}
+            <InteractiveTriagePreview 
+              onStartRealTriage={scrollToSymptomChecker}
+            />
+
+            {/* 7. Languages Showcase */}
+            <LanguagesShowcase
+              onSelectLanguage={(langCode) => {
+                setCurrentLanguage(langCode);
+                scrollToSymptomChecker();
+              }}
+            />
+
+            {/* 8. Safety & Emergency Section */}
+            <SafetySection />
+
+            {/* 9. Final Responsible CTA */}
+            <FinalCTA
+              onStartLiveVoice={() => setShowLiveVoice(true)}
+              onStartTriage={scrollToSymptomChecker}
+            />
+          </div>
         )}
 
+        {/* Fallback standalone views if navigated directly */}
         {activeTab === 'symptoms' && (
           <SymptomInput
             languageCode={currentLanguage}
             translations={translations}
-            onBack={() => setShowLanguageSelector(true)}
+            onBack={() => setActiveTab('home')}
             onAnalyze={handleAnalyzeSymptoms}
             loading={loading}
+            onSwitchToVoice={() => setShowLiveVoice(true)}
           />
         )}
 
@@ -263,29 +370,39 @@ export default function App() {
             isLoggedIn={!!user}
             onOpenAuth={() => setShowAuthModal(true)}
             onDownloadPdf={handleDownloadPdf}
+            onBackToHome={() => setActiveTab('home')}
             translations={translations}
           />
         )}
 
+        {/* User Dashboard / Past Assessments */}
         {activeTab === 'dashboard' && user && (
           <DashboardHistory
             reports={user.savedReports}
             onSelectReport={handleSelectDashboardReport}
             onDownloadReport={handleDownloadDashboardReport}
+            onNewAssessment={scrollToSymptomChecker}
             translations={translations}
           />
         )}
       </main>
 
-      {/* Footer */}
-      <footer className="border-t border-slate-200 bg-white/70 backdrop-blur-md py-8">
-        <div className="mx-auto max-w-7xl px-4 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-slate-500">
-          <p>© {new Date().getFullYear()} SwasthyaAI. Intelligent Medical Triage.</p>
-          <p className="max-w-md text-center sm:text-right">
-            Prototypes are for guidance only. Consult a certified medical doctor for clinical emergencies.
-          </p>
-        </div>
-      </footer>
+      {/* Modern Comprehensive Footer */}
+      <Footer 
+        onOpenLanguage={() => setShowLanguageSelector(true)}
+        currentLanguage={currentLanguage}
+      />
+
+      {/* Live AI Doctor Audio Consultation Modal */}
+      {showLiveVoice && (
+        <LiveVoiceConsultation
+          currentLanguage={currentLanguage}
+          onLanguageChange={(code) => setCurrentLanguage(code)}
+          onClose={() => setShowLiveVoice(false)}
+          onCompleteConsultation={handleCompleteLiveVoice}
+          translations={translations}
+        />
+      )}
 
       {/* Language Selector Modal */}
       {showLanguageSelector && (
@@ -293,13 +410,12 @@ export default function App() {
           onSelect={(langCode) => {
             setCurrentLanguage(langCode);
             setShowLanguageSelector(false);
-            setActiveTab('symptoms');
           }}
           onClose={() => setShowLanguageSelector(false)}
         />
       )}
 
-      {/* Auth Modal */}
+      {/* Authentication Modal */}
       {showAuthModal && (
         <AuthModal
           onClose={() => setShowAuthModal(false)}

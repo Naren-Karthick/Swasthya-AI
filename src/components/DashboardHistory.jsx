@@ -1,10 +1,11 @@
 import React from 'react';
-import { FileDown, Calendar, AlertTriangle, Eye, ShieldAlert, CheckCircle2, Stethoscope, Clock, FileText } from 'lucide-react';
+import { FileDown, Calendar, Eye, FileText, ArrowRight, Plus } from 'lucide-react';
 
 export default function DashboardHistory({
   reports = [],
   onSelectReport,
   onDownloadReport,
+  onNewAssessment,
   translations
 }) {
   const getUrgencyBadgeColor = (level) => {
@@ -32,15 +33,27 @@ export default function DashboardHistory({
           </p>
         </div>
 
-        <div className="inline-flex items-center gap-2 rounded-2xl bg-white px-4 py-2 text-xs font-bold text-slate-700 border border-slate-200/80 shadow-soft-sm self-start sm:self-auto">
-          <FileText className="h-4 w-4 text-emerald-600" />
-          <span>{reports.length} Total Assessments</span>
+        <div className="flex items-center gap-3 self-start sm:self-auto">
+          {onNewAssessment && (
+            <button
+              onClick={onNewAssessment}
+              className="inline-flex items-center gap-1.5 rounded-2xl bg-teal-600 px-4 py-2 text-xs font-bold text-white shadow-soft-sm hover:bg-teal-700 active:scale-95 transition-all cursor-pointer min-h-[38px]"
+            >
+              <Plus className="h-4 w-4" />
+              <span>New Triage Check</span>
+            </button>
+          )}
+
+          <div className="inline-flex items-center gap-2 rounded-2xl bg-white px-4 py-2 text-xs font-bold text-slate-700 border border-slate-200/80 shadow-soft-sm min-h-[38px]">
+            <FileText className="h-4 w-4 text-teal-600" />
+            <span>{reports.length} Saved</span>
+          </div>
         </div>
       </div>
 
       {reports.length === 0 ? (
         <div className="rounded-3xl border border-dashed border-slate-200 bg-white p-12 text-center shadow-soft-sm">
-          <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-emerald-50 to-teal-100 text-emerald-600 shadow-soft-sm">
+          <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-teal-50 text-teal-600 shadow-soft-sm">
             <Calendar className="h-8 w-8" />
           </div>
           <h3 className="mt-5 text-lg font-bold text-slate-900">
@@ -49,13 +62,22 @@ export default function DashboardHistory({
           <p className="mt-2 text-sm text-slate-500 max-w-md mx-auto leading-relaxed">
             {translations.noAssessments || 'You have not conducted any diagnostic assessments yet. Start a new triage session to build your personal health history.'}
           </p>
+          {onNewAssessment && (
+            <button
+              onClick={onNewAssessment}
+              className="mt-6 inline-flex items-center gap-2 rounded-2xl bg-teal-600 px-6 py-3 text-xs sm:text-sm font-bold text-white shadow-soft hover:bg-teal-700 active:scale-95 transition-all cursor-pointer"
+            >
+              <span>Start First Symptom Check</span>
+              <ArrowRight className="h-4 w-4" />
+            </button>
+          )}
         </div>
       ) : (
         <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
           {reports.map((report) => (
             <div
               key={report.id}
-              className="group flex flex-col justify-between overflow-hidden rounded-3xl border border-slate-200/90 bg-white p-6 shadow-soft-sm hover:shadow-soft hover:border-emerald-300 hover:-translate-y-1 transition-all duration-300"
+              className="group flex flex-col justify-between overflow-hidden rounded-3xl border border-slate-200/90 bg-white p-6 shadow-soft-sm hover:shadow-soft hover:border-teal-300 hover:-translate-y-1 transition-all duration-300"
             >
               <div>
                 {/* Header info */}
@@ -82,7 +104,7 @@ export default function DashboardHistory({
                   Clinical Impression
                 </h4>
                 <p className="mt-1 text-xs text-slate-600 line-clamp-3 italic leading-relaxed font-medium bg-slate-50 p-3 rounded-xl border border-slate-100 mt-1.5">
-                  "{report.fullAssessment.primaryAssessment}"
+                  "{report.fullAssessment?.primaryAssessment || 'Assessment recorded.'}"
                 </p>
               </div>
 
@@ -90,15 +112,15 @@ export default function DashboardHistory({
               <div className="mt-6 flex items-center space-x-2 border-t border-slate-100 pt-4">
                 <button
                   onClick={() => onSelectReport(report)}
-                  className="flex flex-1 items-center justify-center space-x-1.5 rounded-xl border border-slate-200/90 bg-white py-2.5 text-xs font-bold text-slate-700 hover:bg-slate-50 hover:border-emerald-300 hover:text-emerald-700 shadow-soft-sm active:scale-95 transition-all cursor-pointer"
+                  className="flex flex-1 items-center justify-center space-x-1.5 rounded-xl border border-slate-200/90 bg-white py-2.5 text-xs font-bold text-slate-700 hover:bg-slate-50 hover:border-teal-300 hover:text-teal-700 shadow-soft-sm active:scale-95 transition-all cursor-pointer min-h-[38px]"
                 >
-                  <Eye className="h-3.5 w-3.5 text-emerald-600" />
+                  <Eye className="h-3.5 w-3.5 text-teal-600" />
                   <span>{translations.viewReport || 'View Details'}</span>
                 </button>
                 
                 <button
                   onClick={() => onDownloadReport(report)}
-                  className="flex items-center justify-center rounded-xl bg-slate-900 p-2.5 text-white hover:bg-slate-800 shadow-soft active:scale-95 transition-all cursor-pointer"
+                  className="flex items-center justify-center rounded-xl bg-slate-900 p-2.5 text-white hover:bg-slate-800 shadow-soft active:scale-95 transition-all cursor-pointer min-h-[38px] min-w-[38px]"
                   title={translations.downloadReport || 'Download PDF Report'}
                 >
                   <FileDown className="h-4 w-4" />
@@ -111,4 +133,3 @@ export default function DashboardHistory({
     </div>
   );
 }
-

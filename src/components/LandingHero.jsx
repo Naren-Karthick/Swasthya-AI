@@ -1,156 +1,236 @@
-import React from 'react';
-import { ShieldAlert, Languages, Mic, Activity, FileDown, ArrowRight, CheckCircle, Stethoscope, Sparkles, Clock, Lock } from 'lucide-react';
+import React, { useState } from 'react';
+import { 
+  ShieldAlert, 
+  ArrowRight, 
+  Mic, 
+  Sparkles, 
+  Clock, 
+  FileDown, 
+  Languages, 
+  AlertTriangle
+} from 'lucide-react';
 
-export default function LandingHero({ onStart, translations }) {
+export default function LandingHero({ onStartTriage, onStartLiveVoice }) {
+  // Interactive mock preview state
+  const [mockSelectedLang, setMockSelectedLang] = useState('hi');
+
+
+  const mockSamples = {
+    en: {
+      text: "Mild chest pressure after climbing stairs, shortness of breath, and mild dizziness for 2 hours.",
+      result: "MODERATE / PROMPT CLINICAL CONSULT",
+      urgency: "MODERATE",
+      action: "Avoid exertion. Have an adult accompany you to an urgent care clinic within 4-6 hours."
+    },
+    hi: {
+      text: "सीढ़ियाँ चढ़ने के बाद सीने में हल्का दबाव, सांस फूलना और २ घंटे से हल्का चक्कर आ रहा है।",
+      result: "मध्यम / त्वरित डॉक्टर परामर्श आवश्यक",
+      urgency: "MODERATE",
+      action: "परिश्रम से बचें। ४-६ घंटे के भीतर नजदीकी क्लिनिक या डॉक्टर से परामर्श लें।"
+    },
+    ta: {
+      text: "படியேறிய பிறகு நெஞ்சில் லேசான அழுத்தம், மூச்சுத் திணறல் மற்றும் 2 மணி நேரமாக தலைச்சுற்றல் உள்ளது.",
+      result: "மிதமான அவசரம் / உடனடி மருத்துவ ஆலோசனை",
+      urgency: "MODERATE",
+      action: "உடனடியாக கடுமையான வேலைகளைத் தவிர்க்கவும். 4-6 மணி நேரத்திற்குள் மருத்துவரை அணுகவும்."
+    }
+  };
+
+  const currentSample = mockSamples[mockSelectedLang] || mockSamples.en;
+
   return (
-    <div className="relative overflow-hidden py-8 sm:py-16 lg:py-20">
-      {/* Dynamic Background Mesh Gradients */}
+    <div className="relative overflow-hidden pt-8 pb-16 sm:pt-14 sm:pb-24 lg:pt-18 lg:pb-28 bg-mesh-clinical">
+      
+      {/* Background Decorative Mesh Shapes */}
       <div className="pointer-events-none absolute inset-0 -z-10 overflow-hidden">
-        <div className="absolute -top-40 left-1/2 -translate-x-1/2 transform-gpu blur-3xl sm:-top-80">
-          <div 
-            className="aspect-[1155/678] w-[72.1875rem] bg-gradient-to-tr from-emerald-200/40 via-cyan-200/40 to-teal-100/30 opacity-70" 
-            style={{
-              clipPath: 'polygon(74.1% 44.1%, 100% 61.6%, 97.5% 26.9%, 85.5% 0.1%, 80.7% 2%, 72.5% 32.5%, 60.2% 62.4%, 52.4% 68.1%, 47.5% 58.3%, 45.2% 34.5%, 27.5% 76.7%, 0.1% 64.9%, 17.9% 100%, 27.6% 76.8%, 76.1% 97.7%, 74.1% 44.1%)'
-            }}
-          />
-        </div>
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-7xl h-[600px] bg-gradient-to-b from-teal-100/40 via-cyan-50/30 to-transparent blur-3xl opacity-70" />
       </div>
 
-      <div className="mx-auto max-w-7xl px-3.5 sm:px-6 lg:px-8">
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         
-        {/* Top Triage Alert Pill */}
-        <div className="flex justify-center">
-          <div className="group mb-6 sm:mb-8 inline-flex items-center gap-2 rounded-full border border-rose-200/80 bg-rose-50/90 px-3.5 py-1.5 text-xs sm:text-sm font-semibold text-rose-800 backdrop-blur-md shadow-soft-sm transition-all hover:bg-rose-100/80 text-left sm:text-center max-w-full">
-            <ShieldAlert className="h-4 w-4 text-rose-600 flex-shrink-0 animate-pulse" />
-            <span className="truncate sm:overflow-visible">{translations.safetyDisclaimer}</span>
+        {/* Top Disclaimer Pill */}
+        <div className="flex justify-center mb-6 sm:mb-8">
+          <div className="inline-flex items-center gap-2 rounded-full border border-teal-200/80 bg-white/90 px-3.5 py-1.5 text-xs font-semibold text-teal-900 shadow-soft-sm backdrop-blur-md">
+            <span className="flex h-2 w-2 rounded-full bg-teal-500 animate-pulse"></span>
+            <span>Educational Triage Support • Not a replacement for emergency care</span>
           </div>
         </div>
 
-        {/* Main Hero Header */}
-        <div className="text-center max-w-4xl mx-auto">
-          <div className="inline-flex items-center gap-1.5 sm:gap-2 rounded-xl bg-emerald-50 px-3 py-1 text-[11px] sm:text-xs font-bold text-emerald-800 border border-emerald-200/60 mb-3 sm:mb-4">
-            <Sparkles className="h-3.5 w-3.5 text-emerald-600 flex-shrink-0" />
-            <span>AI-Powered Clinical Guidance System</span>
-          </div>
-
-          <h1 className="text-3xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight text-slate-900 leading-[1.18] sm:leading-[1.15]">
-            Instant, Multilingual <br className="hidden xs:inline" />
-            <span className="bg-gradient-to-r from-emerald-600 via-teal-600 to-cyan-600 bg-clip-text text-transparent">
-              Medical Symptom Triage
-            </span>
-          </h1>
-
-          <p className="mx-auto mt-4 sm:mt-5 max-w-2xl text-sm sm:text-lg md:text-xl font-medium text-slate-600 leading-relaxed px-2">
-            {translations.heroSubtitle || 'Analyze your symptoms in real-time in your native language. Get emergency urgency stratification, self-care guidance, and structured clinical reports.'}
-          </p>
-
-          {/* Primary CTA button with glowing hover */}
-          <div className="mt-6 sm:mt-8 flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-4 px-2">
-            <button
-              onClick={onStart}
-              className="group flex w-full sm:w-auto items-center justify-center gap-3 rounded-2xl bg-gradient-to-r from-emerald-600 to-teal-600 px-7 py-3.5 sm:px-8 sm:py-4 text-base sm:text-lg font-bold text-white shadow-soft-lg shadow-glow-emerald hover:from-emerald-500 hover:to-teal-500 active:scale-98 transition-all cursor-pointer min-h-[48px]"
-            >
-              <span>{translations.startDiagnosis}</span>
-              <ArrowRight className="h-5 w-5 transition-transform group-hover:translate-x-1" />
-            </button>
-
-            <div className="flex items-center justify-center gap-1.5 text-xs font-semibold text-slate-500 px-2 py-1">
-              <Clock className="h-3.5 w-3.5 text-emerald-600 flex-shrink-0" />
-              <span>Under 60 sec • 100% Confidential</span>
+        {/* Hero Grid: Main Pitch (Left) + Interactive Live Mock Card (Right) */}
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-8 items-center">
+          
+          {/* Left Column: Headlines, Explanations, and Action CTAs */}
+          <div className="lg:col-span-7 text-center lg:text-left space-y-5 sm:space-y-6">
+            
+            <div className="inline-flex items-center gap-2 rounded-xl bg-teal-50 px-3 py-1 text-xs font-extrabold text-teal-800 border border-teal-200/60 shadow-xs">
+              <Sparkles className="h-3.5 w-3.5 text-teal-600 flex-shrink-0" />
+              <span>Multilingual Clinical Guidance System</span>
             </div>
-          </div>
-        </div>
 
-        {/* Trust & Metric Highlights Bar */}
-        <div className="mt-10 sm:mt-14 max-w-5xl mx-auto">
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 rounded-2xl sm:rounded-3xl glass-panel p-3.5 sm:p-5 shadow-soft border border-slate-200/80 text-center">
-            <div className="p-2 sm:p-3 border-r border-slate-100/80">
-              <p className="text-xl sm:text-3xl font-extrabold text-slate-900">8+</p>
-              <p className="text-[11px] sm:text-xs font-semibold text-slate-500 mt-0.5">Indian Languages</p>
-            </div>
-            <div className="p-2 sm:p-3 lg:border-r border-slate-100/80">
-              <p className="text-xl sm:text-3xl font-extrabold text-emerald-600">Real-time</p>
-              <p className="text-[11px] sm:text-xs font-semibold text-slate-500 mt-0.5">Voice-to-Text</p>
-            </div>
-            <div className="p-2 sm:p-3 border-r border-slate-100/80">
-              <p className="text-xl sm:text-3xl font-extrabold text-slate-900">3-Tier</p>
-              <p className="text-[11px] sm:text-xs font-semibold text-slate-500 mt-0.5">Triage Levels</p>
-            </div>
-            <div className="p-2 sm:p-3">
-              <p className="text-xl sm:text-3xl font-extrabold text-teal-600">PDF</p>
-              <p className="text-[11px] sm:text-xs font-semibold text-slate-500 mt-0.5">Clinical Export</p>
-            </div>
-          </div>
-        </div>
+            <h1 className="text-3xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight text-slate-900 leading-[1.12]">
+              Understand Your Symptoms.{' '}
+              <span className="bg-gradient-to-r from-teal-600 via-emerald-600 to-cyan-600 bg-clip-text text-transparent">
+                Know What to Do Next.
+              </span>
+            </h1>
 
-        {/* Feature Cards Grid */}
-        <div className="mx-auto mt-12 sm:mt-16 max-w-6xl">
-          <div className="text-center mb-8 sm:mb-10 px-2">
-            <h2 className="text-xl sm:text-3xl font-bold text-slate-900">
-              {translations.featuresTitle}
-            </h2>
-            <p className="text-xs sm:text-sm text-slate-500 mt-1.5 sm:mt-2">
-              Engineered with advanced AI reasoning and safety-first clinical triage standards
+            <p className="max-w-2xl text-sm sm:text-lg text-slate-600 leading-relaxed font-medium mx-auto lg:mx-0">
+              Describe your symptoms by text or live voice in your preferred Indian language. Swasthya AI provides an instant triage assessment and clear next steps, designed to help you make informed decisions about seeking care.
             </p>
+
+            {/* Dual CTAs */}
+            <div className="pt-2 flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-3 sm:gap-4">
+              
+              {/* Primary CTA: Live Doctor Audio with Gemini Voice */}
+              <button
+                onClick={onStartLiveVoice}
+                className="group flex w-full sm:w-auto items-center justify-center gap-2.5 rounded-2xl bg-gradient-to-r from-teal-600 to-emerald-600 px-7 py-3.5 sm:px-8 sm:py-4 text-sm sm:text-base font-bold text-white shadow-soft-lg shadow-glow-teal hover:from-teal-500 hover:to-emerald-500 active:scale-95 transition-all cursor-pointer min-h-[48px]"
+              >
+                <Mic className="h-5 w-5 animate-pulse text-teal-100" />
+                <span>Talk to AI Doctor (Gemini Voice)</span>
+                <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
+              </button>
+
+              {/* Secondary CTA: Manual Symptom Entry on Same Page */}
+              <button
+                onClick={onStartTriage}
+                className="flex w-full sm:w-auto items-center justify-center gap-2 rounded-2xl border border-slate-300 bg-white px-6 py-3.5 sm:py-4 text-sm sm:text-base font-bold text-slate-800 shadow-soft-sm hover:bg-slate-50 hover:border-slate-400 active:scale-95 transition-all cursor-pointer min-h-[48px]"
+              >
+                <span>Check Symptoms (Manual Entry)</span>
+              </button>
+            </div>
+
+            {/* Micro Trust Strip under CTA */}
+            <div className="pt-2 flex flex-wrap items-center justify-center lg:justify-start gap-4 text-xs font-semibold text-slate-500">
+              <span className="flex items-center gap-1.5">
+                <Clock className="h-3.5 w-3.5 text-teal-600" />
+                <span>Under 60 seconds</span>
+              </span>
+              <span className="text-slate-300">•</span>
+              <span className="flex items-center gap-1.5">
+                <Languages className="h-3.5 w-3.5 text-teal-600" />
+                <span>8+ Indian Languages</span>
+              </span>
+              <span className="text-slate-300">•</span>
+              <span className="flex items-center gap-1.5">
+                <FileDown className="h-3.5 w-3.5 text-teal-600" />
+                <span>Doctor-Ready PDF</span>
+              </span>
+            </div>
+
+            {/* Non-alarming Medical Disclaimer */}
+            <div className="rounded-2xl border border-amber-200/70 bg-amber-50/60 p-3.5 text-left max-w-xl mx-auto lg:mx-0">
+              <div className="flex items-start gap-2.5">
+                <ShieldAlert className="h-4 w-4 text-amber-600 mt-0.5 flex-shrink-0" />
+                <p className="text-[11px] sm:text-xs text-amber-900 leading-relaxed font-medium">
+                  <strong>Clinical Notice:</strong> Informational triage guidance only. If you experience severe chest pain, shortness of breath, or sudden weakness, call <strong>108 / 112</strong> or visit the nearest emergency room immediately.
+                </p>
+              </div>
+            </div>
+
           </div>
 
-          <div className="grid gap-4 sm:gap-6 sm:grid-cols-2 lg:grid-cols-4">
-            {/* Voice-to-Text */}
-            <div className="group relative rounded-2xl border border-slate-200/90 bg-white p-5 sm:p-6 shadow-soft-sm hover:shadow-soft hover:border-emerald-300 hover:-translate-y-1 transition-all duration-300">
-              <div className="inline-flex rounded-xl bg-gradient-to-br from-emerald-50 to-emerald-100 p-3 sm:p-3.5 text-emerald-700 shadow-sm">
-                <Mic className="h-5 w-5 sm:h-6 sm:w-6" />
-              </div>
-              <h3 className="mt-3.5 sm:mt-4 text-sm sm:text-base font-bold text-slate-900">
-                {translations.featureVoiceTitle}
-              </h3>
-              <p className="mt-1.5 sm:mt-2 text-xs sm:text-sm text-slate-600 leading-relaxed">
-                {translations.featureVoiceDesc}
-              </p>
-            </div>
+          {/* Right Column: Visually Appealing Mock Product Interface Card */}
+          <div className="lg:col-span-5">
+            <div className="relative mx-auto max-w-md lg:max-w-none">
+              
+              {/* Glow Behind Card */}
+              <div className="absolute -inset-1.5 rounded-3xl bg-gradient-to-r from-teal-500 to-cyan-500 opacity-20 blur-xl"></div>
+              
+              {/* Mock Window Card */}
+              <div className="relative rounded-3xl border border-slate-200/90 bg-white p-5 sm:p-6 shadow-soft-lg">
+                
+                {/* Mock Card Header */}
+                <div className="flex items-center justify-between border-b border-slate-100 pb-3 mb-4">
+                  <div className="flex items-center space-x-2">
+                    <div className="h-3 w-3 rounded-full bg-rose-400"></div>
+                    <div className="h-3 w-3 rounded-full bg-amber-400"></div>
+                    <div className="h-3 w-3 rounded-full bg-emerald-400"></div>
+                    <span className="ml-2 text-xs font-bold text-slate-800">
+                      Live Triage Simulator
+                    </span>
+                  </div>
 
-            {/* Multilingual */}
-            <div className="group relative rounded-2xl border border-slate-200/90 bg-white p-5 sm:p-6 shadow-soft-sm hover:shadow-soft hover:border-cyan-300 hover:-translate-y-1 transition-all duration-300">
-              <div className="inline-flex rounded-xl bg-gradient-to-br from-cyan-50 to-cyan-100 p-3 sm:p-3.5 text-cyan-700 shadow-sm">
-                <Languages className="h-5 w-5 sm:h-6 sm:w-6" />
-              </div>
-              <h3 className="mt-3.5 sm:mt-4 text-sm sm:text-base font-bold text-slate-900">
-                {translations.featureMultilingualTitle}
-              </h3>
-              <p className="mt-1.5 sm:mt-2 text-xs sm:text-sm text-slate-600 leading-relaxed">
-                {translations.featureMultilingualDesc}
-              </p>
-            </div>
+                  {/* Language Switcher in Mock */}
+                  <div className="flex items-center gap-1 rounded-xl bg-slate-100 p-1">
+                    {[
+                      { code: 'hi', label: 'हिन्दी' },
+                      { code: 'en', label: 'EN' },
+                      { code: 'ta', label: 'தமிழ்' }
+                    ].map((lang) => (
+                      <button
+                        key={lang.code}
+                        onClick={() => setMockSelectedLang(lang.code)}
+                        className={`rounded-lg px-2 py-0.5 text-[10px] font-extrabold cursor-pointer transition-colors ${
+                          mockSelectedLang === lang.code
+                            ? 'bg-white text-teal-700 shadow-xs'
+                            : 'text-slate-500 hover:text-slate-800'
+                        }`}
+                      >
+                        {lang.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
 
-            {/* Triage */}
-            <div className="group relative rounded-2xl border border-slate-200/90 bg-white p-5 sm:p-6 shadow-soft-sm hover:shadow-soft hover:border-teal-300 hover:-translate-y-1 transition-all duration-300">
-              <div className="inline-flex rounded-xl bg-gradient-to-br from-teal-50 to-teal-100 p-3 sm:p-3.5 text-teal-700 shadow-sm">
-                <Activity className="h-5 w-5 sm:h-6 sm:w-6" />
-              </div>
-              <h3 className="mt-3.5 sm:mt-4 text-sm sm:text-base font-bold text-slate-900">
-                {translations.featureUrgencyTitle}
-              </h3>
-              <p className="mt-1.5 sm:mt-2 text-xs sm:text-sm text-slate-600 leading-relaxed">
-                {translations.featureUrgencyDesc}
-              </p>
-            </div>
+                {/* Mock Live Symptom Input */}
+                <div className="rounded-2xl border border-slate-200 bg-slate-50/60 p-3.5 mb-3.5">
+                  <div className="flex items-center justify-between text-[10px] font-bold uppercase tracking-wider text-slate-500 mb-1">
+                    <span className="flex items-center gap-1">
+                      <Mic className="h-3 w-3 text-teal-600 animate-pulse" />
+                      Patient Voice Transcription
+                    </span>
+                    <span className="text-teal-600">Active</span>
+                  </div>
+                  <p className="text-xs sm:text-sm text-slate-800 font-medium leading-relaxed">
+                    "{currentSample.text}"
+                  </p>
+                </div>
 
-            {/* PDF Report */}
-            <div className="group relative rounded-2xl border border-slate-200/90 bg-white p-5 sm:p-6 shadow-soft-sm hover:shadow-soft hover:border-indigo-300 hover:-translate-y-1 transition-all duration-300">
-              <div className="inline-flex rounded-xl bg-gradient-to-br from-indigo-50 to-indigo-100 p-3 sm:p-3.5 text-indigo-700 shadow-sm">
-                <FileDown className="h-5 w-5 sm:h-6 sm:w-6" />
+                {/* Processing State Indicator */}
+                <div className="flex items-center justify-between bg-teal-50/70 border border-teal-100 rounded-xl px-3 py-2 text-xs font-semibold text-teal-900 mb-3.5">
+                  <div className="flex items-center gap-2">
+                    <span className="relative flex h-2 w-2">
+                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-teal-400 opacity-75"></span>
+                      <span className="relative inline-flex rounded-full h-2 w-2 bg-teal-500"></span>
+                    </span>
+                    <span>AI Urgency Evaluation Complete</span>
+                  </div>
+                  <span className="text-[10px] font-bold text-teal-700 bg-white border border-teal-200 px-2 py-0.5 rounded-full">
+                    99.2% Protocol Match
+                  </span>
+                </div>
+
+                {/* Triage Urgency Result Preview */}
+                <div className="rounded-2xl border border-amber-300 bg-amber-50/70 p-4 mb-4">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="inline-flex items-center gap-1 rounded-md bg-amber-500 text-white px-2 py-0.5 text-[10px] font-black uppercase tracking-wider">
+                      <AlertTriangle className="h-3 w-3" />
+                      {currentSample.result}
+                    </span>
+                    <span className="text-[10px] font-bold text-amber-800">Tier 2 of 3</span>
+                  </div>
+                  <p className="text-xs text-amber-950 font-medium leading-relaxed">
+                    {currentSample.action}
+                  </p>
+                </div>
+
+                {/* Quick Action Button to Launch Real Check */}
+                <button
+                  onClick={onStartTriage}
+                  className="flex w-full items-center justify-center gap-2 rounded-xl bg-slate-900 py-2.5 text-xs font-bold text-white hover:bg-slate-800 active:scale-95 transition-all cursor-pointer shadow-soft-sm"
+                >
+                  <span>Launch Full Triage for Your Symptoms</span>
+                  <ArrowRight className="h-3.5 w-3.5" />
+                </button>
+
               </div>
-              <h3 className="mt-3.5 sm:mt-4 text-sm sm:text-base font-bold text-slate-900">
-                {translations.featurePdfTitle}
-              </h3>
-              <p className="mt-1.5 sm:mt-2 text-xs sm:text-sm text-slate-600 leading-relaxed">
-                {translations.featurePdfDesc}
-              </p>
             </div>
           </div>
+
         </div>
+
       </div>
     </div>
   );
 }
-
-

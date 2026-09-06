@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { X, User, Mail, Lock, ShieldCheck, ArrowRight, Sparkles } from 'lucide-react';
+import { X, User, Mail, Lock, ShieldCheck, ArrowRight } from 'lucide-react';
 
 export default function AuthModal({ onClose, onSubmit, translations }) {
   const [mode, setMode] = useState('signup'); // 'signup' | 'login'
@@ -31,7 +31,7 @@ export default function AuthModal({ onClose, onSubmit, translations }) {
         {/* Header with gradient badge */}
         <div className="flex items-center justify-between border-b border-slate-100 px-6 py-5 bg-gradient-to-b from-slate-50 to-white">
           <div className="flex items-center space-x-2.5 text-slate-900">
-            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-emerald-50 text-emerald-600 border border-emerald-100">
+            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-teal-50 text-teal-600 border border-teal-100">
               <ShieldCheck className="h-5 w-5" />
             </div>
             <div>
@@ -71,10 +71,10 @@ export default function AuthModal({ onClose, onSubmit, translations }) {
                   <input
                     type="text"
                     required
-                    placeholder="John Doe"
+                    placeholder="Patient Name"
                     value={name}
                     onChange={(e) => setName(e.target.value)}
-                    className="w-full rounded-xl border border-slate-200 bg-slate-50/50 py-3 pl-10 pr-4 text-slate-900 placeholder-slate-400 focus:bg-white focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 text-sm font-medium transition-all"
+                    className="w-full rounded-xl border border-slate-200 bg-slate-50/50 py-3 pl-10 pr-4 text-slate-900 placeholder-slate-400 focus:bg-white focus:border-teal-500 focus:outline-none focus:ring-2 focus:ring-teal-500/20 text-sm font-medium transition-all"
                   />
                 </div>
               </div>
@@ -93,7 +93,7 @@ export default function AuthModal({ onClose, onSubmit, translations }) {
                   placeholder="patient@example.com"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="w-full rounded-xl border border-slate-200 bg-slate-50/50 py-3 pl-10 pr-4 text-slate-900 placeholder-slate-400 focus:bg-white focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 text-sm font-medium transition-all"
+                  className="w-full rounded-xl border border-slate-200 bg-slate-50/50 py-3 pl-10 pr-4 text-slate-900 placeholder-slate-400 focus:bg-white focus:border-teal-500 focus:outline-none focus:ring-2 focus:ring-teal-500/20 text-sm font-medium transition-all"
                 />
               </div>
             </div>
@@ -111,7 +111,7 @@ export default function AuthModal({ onClose, onSubmit, translations }) {
                   placeholder="••••••••"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="w-full rounded-xl border border-slate-200 bg-slate-50/50 py-3 pl-10 pr-4 text-slate-900 placeholder-slate-400 focus:bg-white focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 text-sm font-medium transition-all"
+                  className="w-full rounded-xl border border-slate-200 bg-slate-50/50 py-3 pl-10 pr-4 text-slate-900 placeholder-slate-400 focus:bg-white focus:border-teal-500 focus:outline-none focus:ring-2 focus:ring-teal-500/20 text-sm font-medium transition-all"
                 />
               </div>
             </div>
@@ -120,7 +120,7 @@ export default function AuthModal({ onClose, onSubmit, translations }) {
             <button
               type="submit"
               disabled={loading}
-              className="mt-6 flex w-full items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-emerald-600 to-teal-600 py-3.5 text-sm font-bold text-white shadow-soft-lg shadow-glow-emerald hover:from-emerald-500 hover:to-teal-500 active:scale-98 transition-all disabled:opacity-50 disabled:pointer-events-none cursor-pointer"
+              className="mt-6 flex w-full items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-teal-600 to-emerald-600 py-3.5 text-sm font-bold text-white shadow-soft-lg shadow-glow-teal hover:from-teal-500 hover:to-emerald-500 active:scale-98 transition-all disabled:opacity-50 disabled:pointer-events-none cursor-pointer"
             >
               {loading ? (
                 <div className="h-5 w-5 animate-spin rounded-full border-2 border-white border-t-transparent" />
@@ -140,7 +140,7 @@ export default function AuthModal({ onClose, onSubmit, translations }) {
                 setMode(mode === 'signup' ? 'login' : 'signup');
                 setError('');
               }}
-              className="text-xs font-semibold text-emerald-600 hover:text-emerald-700 transition-colors cursor-pointer"
+              className="text-xs font-semibold text-teal-600 hover:text-teal-700 transition-colors cursor-pointer"
             >
               {mode === 'signup'
                 ? translations.alreadyHaveAccount
@@ -152,4 +152,3 @@ export default function AuthModal({ onClose, onSubmit, translations }) {
     </div>
   );
 }
-

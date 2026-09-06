@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { HeartPulse, User, LogOut, History, Home, Globe, Menu, X, Sparkles } from 'lucide-react';
+import { HeartPulse, User, LogOut, History, Home, Globe, Menu, X } from 'lucide-react';
 
 export default function Navbar({
   user,
