@@ -3,8 +3,21 @@ import { languages } from '../localization';
 import { X, Languages } from 'lucide-react';
 
 export default function LanguageSelector({ onSelect, onClose }) {
+  React.useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape') onClose();
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [onClose]);
+
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/60 p-4 backdrop-blur-md animate-in fade-in duration-200">
+    <div 
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="langDialogTitle"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/60 p-4 backdrop-blur-md animate-in fade-in duration-200"
+    >
       <div className="w-full max-w-lg overflow-hidden rounded-3xl bg-white shadow-2xl border border-slate-100 animate-in zoom-in-95 duration-200">
         
         {/* Header */}
@@ -14,11 +27,11 @@ export default function LanguageSelector({ onSelect, onClose }) {
               <Languages className="h-5 w-5" />
             </div>
             <div>
-              <h3 className="text-base font-extrabold text-slate-900">
+              <h3 id="langDialogTitle" className="text-base font-extrabold text-slate-900">
                 Choose Language / भाषा चुनें
               </h3>
-              <p className="text-[11px] font-medium text-slate-400">
-                Real-time translation for AI doctor voice intake & reports
+              <p className="text-[11px] font-medium text-slate-500">
+                Vernacular translation for triage intake & reports
               </p>
             </div>
           </div>

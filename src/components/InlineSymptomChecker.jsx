@@ -313,7 +313,7 @@ export default function InlineSymptomChecker({
                 className="inline-flex items-center gap-1.5 rounded-xl bg-teal-50 hover:bg-teal-100/80 border border-teal-200 px-3 py-1.5 text-xs font-bold text-teal-800 transition-colors cursor-pointer shadow-xs"
               >
                 <Mic className="h-3.5 w-3.5 text-teal-600 animate-pulse" />
-                <span>Talk to AI Doctor (Gemini Voice)</span>
+                <span>Talk to Voice Assistant (Gemini Voice)</span>
               </button>
             )}
           </div>

@@ -159,7 +159,7 @@ export default function SymptomInput({
             className="inline-flex items-center gap-1.5 rounded-full bg-teal-50 hover:bg-teal-100 px-3 py-1 text-xs font-bold text-teal-800 border border-teal-200 transition-colors cursor-pointer shadow-soft-sm"
           >
             <Mic className="h-3.5 w-3.5 text-teal-600 animate-pulse" />
-            <span>Switch to AI Doctor Audio</span>
+            <span>Switch to Voice Intake</span>
           </button>
         )}
       </div>

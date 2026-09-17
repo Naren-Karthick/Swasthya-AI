@@ -32,7 +32,7 @@ export default function FinalCTA({ onStartLiveVoice, onStartTriage }) {
             className="group flex w-full sm:w-auto items-center justify-center gap-2.5 rounded-2xl bg-gradient-to-r from-teal-600 to-emerald-600 px-7 py-3.5 sm:py-4 text-sm sm:text-base font-bold text-white shadow-soft-lg shadow-glow-teal hover:from-teal-500 hover:to-emerald-500 active:scale-95 transition-all cursor-pointer min-h-[48px]"
           >
             <Mic className="h-4 w-4 sm:h-5 sm:w-5 animate-pulse" />
-            <span>AI Doctor Audio Live</span>
+            <span>Voice Intake Consultation</span>
             <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
           </button>
 
