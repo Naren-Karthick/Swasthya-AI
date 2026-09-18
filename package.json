@@ -7,14 +7,17 @@
     "dev": "vite",
     "build": "vite build",
     "lint": "oxlint",
-    "test": "node --test src/__tests__/*.test.js",
+    "test": "node --env-file-if-exists=.env --test src/__tests__/*.test.js",
     "preview": "vite preview"
   },
   "dependencies": {
     "@google/genai": "^2.19.0",
+    "@livekit/components-react": "^2.9.24",
     "@tailwindcss/vite": "^4.3.3",
     "html2pdf.js": "^0.14.0",
     "jspdf": "^4.2.1",
+    "livekit-client": "^2.22.3",
+    "livekit-server-sdk": "^2.19.0",
     "lucide-react": "^1.38.0",
     "react": "^19.2.8",
     "react-dom": "^19.2.8",

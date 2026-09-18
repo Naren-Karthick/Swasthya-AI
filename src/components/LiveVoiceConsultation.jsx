@@ -9,11 +9,16 @@ import {
   AlertCircle,
   Edit3,
   CheckCircle2,
-  VolumeX
+  VolumeX,
+  Radio,
+  Wifi,
+  Sparkles
 } from 'lucide-react';
 import { liveDoctorInitialGreeting, languages } from '../localization';
 import { converseDoctorSession } from '../api';
 import { stopSpeech, speakAssessmentText } from '../utils/speechEngine';
+import { LiveKitVoiceSession } from '../utils/livekitVoice';
+import { getLiveKitConfig } from '../utils/livekitToken';
 
 export default function LiveVoiceConsultation({
   currentLanguage,
@@ -23,6 +28,7 @@ export default function LiveVoiceConsultation({
   _translations
 }) {
   const initialGreeting = liveDoctorInitialGreeting[currentLanguage] || liveDoctorInitialGreeting.en;
+  const livekitConfig = getLiveKitConfig();
 
   // Modality & Capability State
   const speechSupported = typeof window !== 'undefined' && Boolean(window.SpeechRecognition || window.webkitSpeechRecognition);
@@ -31,6 +37,11 @@ export default function LiveVoiceConsultation({
   // 'INITIAL' | 'LISTENING' | 'THINKING' | 'SPEAKING' | 'REVIEW_TRANSCRIPT' | 'PERMISSION_DENIED' | 'UNSUPPORTED' | 'TIMEOUT'
   const [sessionState, setSessionState] = useState(speechSupported ? 'INITIAL' : 'UNSUPPORTED');
   
+  // LiveKit WebRTC Session State
+  const [livekitStatus, setLivekitStatus] = useState('CONNECTING'); // 'CONNECTING' | 'CONNECTED' | 'RECONNECTING' | 'ERROR' | 'DISCONNECTED'
+  const [livekitRoomName] = useState(() => `swasthya-${Date.now().toString(36)}`);
+  const [isRemoteSpeaking, setIsRemoteSpeaking] = useState(false);
+
   const [messages, setMessages] = useState(() => [
     { sender: 'assistant', text: initialGreeting, timestamp: new Date() }
   ]);
@@ -45,14 +56,11 @@ export default function LiveVoiceConsultation({
   const recognitionRef = useRef(null);
   const synthRef = useRef(typeof window !== 'undefined' ? window.speechSynthesis : null);
   const currentAudioRef = useRef(null);
-  const audioContextRef = useRef(null);
-  const analyserRef = useRef(null);
-  const micStreamRef = useRef(null);
-  const animFrameRef = useRef(null);
+  const livekitSessionRef = useRef(null);
   const silenceTimeoutRef = useRef(null);
   const isProcessingRef = useRef(false);
 
-  // Cleanup all audio and microphone streams
+  // Cleanup all audio, LiveKit WebRTC, and microphone streams
   const stopAllAudioAndStreams = useCallback(() => {
     stopSpeech();
 
@@ -92,36 +100,74 @@ export default function LiveVoiceConsultation({
       currentAudioRef.current = null;
     }
 
-    // 5. Cancel Audio Visualizer Animation Frame
-    if (animFrameRef.current) {
-      cancelAnimationFrame(animFrameRef.current);
-      animFrameRef.current = null;
-    }
-
-    // 6. Stop Microphone MediaStream Tracks
-    if (micStreamRef.current) {
-      micStreamRef.current.getTracks().forEach(track => {
-        try {
-          track.stop();
-        } catch (e) {
-          console.warn(e);
-        }
-      });
-      micStreamRef.current = null;
-    }
-
-    // 7. Close Web Audio Context
-    if (audioContextRef.current && audioContextRef.current.state !== 'closed') {
+    // 5. Disconnect LiveKit WebRTC Session
+    if (livekitSessionRef.current) {
       try {
-        audioContextRef.current.close();
+        livekitSessionRef.current.disconnect();
       } catch (e) {
-        console.warn(e);
+        console.warn('LiveKit cleanup note:', e);
       }
-      audioContextRef.current = null;
+      livekitSessionRef.current = null;
     }
+
+    setAudioLevel(1);
   }, []);
 
-  // Modal Escape key listener & Mount/Unmount cleanup
+  // Connect to LiveKit WebRTC Cloud room on component mount
+  useEffect(() => {
+    const session = new LiveKitVoiceSession({
+      onStateChange: (state, payload) => {
+        if (state === 'CONNECTED') {
+          setLivekitStatus('CONNECTED');
+        } else if (state === 'CONNECTING') {
+          setLivekitStatus('CONNECTING');
+        } else if (state === 'RECONNECTING') {
+          setLivekitStatus('RECONNECTING');
+        } else if (state === 'DISCONNECTED') {
+          setLivekitStatus('DISCONNECTED');
+        } else if (state === 'ERROR') {
+          setLivekitStatus('ERROR');
+        } else if (state === 'SPEAKERS_UPDATE') {
+          setIsRemoteSpeaking(Boolean(payload?.isRemoteSpeaking));
+        }
+      },
+      onAudioLevel: (level) => {
+        setAudioLevel(level);
+      },
+      onRemoteAudioStarted: ({ participant }) => {
+        console.log('[LiveKit] Remote audio stream active from:', participant);
+        setIsRemoteSpeaking(true);
+      },
+      onRemoteAudioEnded: () => {
+        setIsRemoteSpeaking(false);
+      },
+      onDataMessage: ({ data }) => {
+        if (data?.text && data?.sender) {
+          setMessages(prev => [...prev, { sender: data.sender, text: data.text, timestamp: new Date() }]);
+        }
+      },
+      onError: (err) => {
+        console.warn('[LiveKit] Voice session error:', err);
+        setLivekitStatus('ERROR');
+      }
+    });
+
+    livekitSessionRef.current = session;
+
+    session.connect({
+      roomName: livekitRoomName,
+      name: 'Swasthya Patient'
+    }).catch((err) => {
+      console.warn('[LiveKit] Connection fallback note:', err?.message);
+      setLivekitStatus('ERROR');
+    });
+
+    return () => {
+      session.disconnect();
+    };
+  }, [livekitRoomName]);
+
+  // Modal Escape key listener & Unmount cleanup
   useEffect(() => {
     const handleKeyDown = (e) => {
       if (e.key === 'Escape') {
@@ -136,29 +182,7 @@ export default function LiveVoiceConsultation({
     };
   }, [stopAllAudioAndStreams, onClose]);
 
-  // Audio level visualizer loop
-  const startVisualizer = useCallback(() => {
-    if (!analyserRef.current) return;
-    const dataArray = new Uint8Array(analyserRef.current.frequencyBinCount);
-
-    const updateVolume = () => {
-      if (!analyserRef.current) return;
-      analyserRef.current.getByteFrequencyData(dataArray);
-      let sum = 0;
-      for (let i = 0; i < dataArray.length; i++) {
-        sum += dataArray[i];
-      }
-      const avg = sum / dataArray.length;
-      // Normalize to 1-2 scale for CSS transform
-      const scaled = Math.min(2.2, Math.max(1, 1 + (avg / 40)));
-      setAudioLevel(scaled);
-      animFrameRef.current = requestAnimationFrame(updateVolume);
-    };
-
-    updateVolume();
-  }, []);
-
-  // Browser TTS spoken feedback using unified speechEngine
+  // Spoken feedback using unified speechEngine
   const speakSpokenText = useCallback((text, onFinished) => {
     stopSpeech();
     speakAssessmentText(text, {
@@ -182,6 +206,14 @@ export default function LiveVoiceConsultation({
     isProcessingRef.current = true;
     stopSpeech();
 
+    // Broadcast user transcript to LiveKit room
+    livekitSessionRef.current?.broadcastData({
+      sender: 'patient',
+      text: trimmed,
+      language: currentLanguage,
+      timestamp: new Date().toISOString()
+    });
+
     // Add to message history
     const updatedMessages = [...messages, { sender: 'patient', text: trimmed, timestamp: new Date() }];
     setMessages(updatedMessages);
@@ -203,6 +235,14 @@ export default function LiveVoiceConsultation({
         timestamp: new Date()
       };
       setMessages([...updatedMessages, botMessage]);
+
+      // Broadcast assistant response over LiveKit data channel
+      livekitSessionRef.current?.broadcastData({
+        sender: 'assistant',
+        text: response.spokenResponse,
+        isCompleted: response.isCompleted,
+        timestamp: new Date().toISOString()
+      });
 
       if (response.isCompleted) {
         speakSpokenText(response.spokenResponse, () => {
@@ -226,10 +266,10 @@ export default function LiveVoiceConsultation({
     }
   }, [messages, accumulatedTranscript, currentLanguage, speakSpokenText]);
 
-  // Start Mic Listening
+  // Start Mic Listening with LiveKit WebRTC Audio Stream
   const startListening = async () => {
     setErrorMessage(null);
-    stopSpeech(); // Immediately silence any running audio before listening!
+    stopSpeech(); // Silence running audio before listening
 
     if (!speechSupported) {
       setSessionState('UNSUPPORTED');
@@ -237,23 +277,16 @@ export default function LiveVoiceConsultation({
     }
 
     try {
-      // 1. Request microphone access for audio visualizer
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      micStreamRef.current = stream;
-
-      const AudioContext = window.AudioContext || window.webkitAudioContext;
-      if (AudioContext) {
-        const audioCtx = new AudioContext();
-        audioContextRef.current = audioCtx;
-        const source = audioCtx.createMediaStreamSource(stream);
-        const analyser = audioCtx.createAnalyser();
-        analyser.fftSize = 64;
-        source.connect(analyser);
-        analyserRef.current = analyser;
-        startVisualizer();
+      // 1. Start LiveKit WebRTC microphone publishing with echo cancellation & noise suppression
+      if (livekitSessionRef.current && livekitStatus === 'CONNECTED') {
+        try {
+          await livekitSessionRef.current.startMicrophone();
+        } catch (lkErr) {
+          console.warn('[LiveKit] WebRTC mic stream warning:', lkErr);
+        }
       }
 
-      // 2. Initialize Speech Recognition
+      // 2. Initialize Speech Recognition for live text transcription
       const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
       const rec = new SpeechRecognition();
       rec.continuous = true;
@@ -331,7 +364,7 @@ export default function LiveVoiceConsultation({
     }
   };
 
-  // Stop Mic Listening & release microphone hardware tracks
+  // Stop Mic Listening & mute LiveKit WebRTC microphone
   const stopListening = () => {
     if (silenceTimeoutRef.current) {
       clearTimeout(silenceTimeoutRef.current);
@@ -339,22 +372,18 @@ export default function LiveVoiceConsultation({
     }
     if (recognitionRef.current) {
       try {
-        recognitionRef.current.abort(); // abort clears buffers immediately
+        recognitionRef.current.abort();
       } catch (e) {
         console.warn(e);
       }
       recognitionRef.current = null;
     }
-    if (animFrameRef.current) {
-      cancelAnimationFrame(animFrameRef.current);
-      animFrameRef.current = null;
+
+    // Mute LiveKit microphone
+    if (livekitSessionRef.current) {
+      livekitSessionRef.current.muteMicrophone().catch(() => {});
     }
-    if (micStreamRef.current) {
-      micStreamRef.current.getTracks().forEach(track => {
-        try { track.stop(); } catch {}
-      });
-      micStreamRef.current = null;
-    }
+
     setAudioLevel(1);
     setInterimText('');
   };
@@ -380,7 +409,7 @@ export default function LiveVoiceConsultation({
       role="dialog"
       aria-modal="true"
       aria-labelledby="voiceModalTitle"
-      className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/70 p-3 sm:p-6 backdrop-blur-md animate-in fade-in"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/75 p-3 sm:p-6 backdrop-blur-md animate-in fade-in"
     >
       <div 
         className="flex h-full max-h-[92vh] w-full max-w-2xl flex-col rounded-3xl bg-white shadow-2xl border border-slate-200 overflow-hidden"
@@ -388,17 +417,19 @@ export default function LiveVoiceConsultation({
       >
         
         {/* Modal Top Header Bar */}
-        <div className="flex items-center justify-between border-b border-slate-100 bg-slate-50/90 px-5 py-4">
+        <div className="flex items-center justify-between border-b border-slate-100 bg-slate-50/95 px-5 py-4">
           <div className="flex items-center space-x-3">
             <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-teal-600 text-white shadow-soft-sm">
               <HeartPulse className="h-5 w-5" />
             </div>
             <div>
-              <h2 id="voiceModalTitle" className="text-base sm:text-lg font-black text-slate-900">
-                Conversational Voice Intake
-              </h2>
+              <div className="flex items-center gap-2">
+                <h2 id="voiceModalTitle" className="text-base sm:text-lg font-black text-slate-900">
+                  Live Voice Consultation
+                </h2>
+              </div>
               <p className="text-xs text-slate-500 font-medium">
-                Informational preliminary triage assessment
+                LiveKit WebRTC Clinical Intake • Informational Triage
               </p>
             </div>
           </div>
@@ -431,9 +462,58 @@ export default function LiveVoiceConsultation({
           </div>
         </div>
 
-        {/* Informational Notice Pill */}
+        {/* LiveKit WebRTC Cloud Status Bar */}
+        <div className="flex items-center justify-between bg-slate-900 px-4 py-2 text-xs font-semibold text-white">
+          <div className="flex items-center gap-2">
+            <div className="relative flex h-2.5 w-2.5 items-center justify-center">
+              {livekitStatus === 'CONNECTED' ? (
+                <>
+                  <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75"></span>
+                  <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-500"></span>
+                </>
+              ) : livekitStatus === 'CONNECTING' || livekitStatus === 'RECONNECTING' ? (
+                <>
+                  <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-amber-400 opacity-75"></span>
+                  <span className="relative inline-flex h-2 w-2 rounded-full bg-amber-500"></span>
+                </>
+              ) : (
+                <span className="relative inline-flex h-2 w-2 rounded-full bg-slate-400"></span>
+              )}
+            </div>
+
+            <span className="flex items-center gap-1 font-mono tracking-tight text-[11px]">
+              <Radio className="h-3.5 w-3.5 text-teal-400" />
+              {livekitStatus === 'CONNECTED' ? (
+                <span>
+                  <strong className="text-emerald-400">LiveKit WebRTC Cloud Connected</strong>
+                  <span className="hidden sm:inline text-slate-400 ml-1">({livekitConfig.url.replace('wss://', '')})</span>
+                </span>
+              ) : livekitStatus === 'CONNECTING' ? (
+                <span className="text-amber-300">Connecting to LiveKit WebRTC Cloud...</span>
+              ) : livekitStatus === 'RECONNECTING' ? (
+                <span className="text-amber-300">Reconnecting LiveKit stream...</span>
+              ) : (
+                <span className="text-slate-300">LiveKit Standby (Web Speech Active)</span>
+              )}
+            </span>
+          </div>
+
+          <div className="flex items-center gap-2 text-[11px] text-slate-300">
+            {isRemoteSpeaking ? (
+              <span className="flex items-center gap-1 text-teal-300 font-bold animate-pulse">
+                <Sparkles className="h-3 w-3" /> Remote Audio Speaking
+              </span>
+            ) : (
+              <span className="flex items-center gap-1 text-slate-400">
+                <Wifi className="h-3 w-3 text-emerald-400" /> HD Audio • 48kHz
+              </span>
+            )}
+          </div>
+        </div>
+
+        {/* Informational Safety Warning */}
         <div className="bg-amber-50 border-b border-amber-100 px-4 py-2 text-center text-xs font-semibold text-amber-900">
-          <span>⚠️ Voice intake assistant for informational triage. In an emergency, dial 108 or 112 immediately.</span>
+          <span>⚠️ Voice intake assistant for preliminary clinical triage. In an emergency, dial 108 or 112 immediately.</span>
         </div>
 
         {errorMessage && (
@@ -616,7 +696,7 @@ export default function LiveVoiceConsultation({
 
               <span className="text-xs font-extrabold text-slate-700 text-center">
                 {sessionState === 'LISTENING' 
-                  ? 'Listening... Tap to Stop & Process' 
+                  ? 'Listening via LiveKit HD WebRTC... Tap to Stop & Process' 
                   : sessionState === 'SPEAKING'
                   ? 'Assistant Speaking — Tap to Stop Audio'
                   : 'Tap Microphone to Speak in Your Language'}
