@@ -9,7 +9,7 @@
 > **Healthcare Hackathon Submission — Clinical Urgency Guidance Prototype**  
 > *Live Prototype:* [swasthya-ai-healix.vercel.app](https://swasthya-ai-healix.vercel.app/)  
 > *Repository:* [github.com/Naren-Karthick/Swasthya-AI](https://github.com/Naren-Karthick/Swasthya-AI)  
-> *Live npoint Database:* `https://api.npoint.io/ead356d4d55965c0a760`
+
 
 ---
 
