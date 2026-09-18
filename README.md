@@ -2,7 +2,6 @@
 
 [![Build Status](https://img.shields.io/badge/build-passing-emerald.svg)](https://github.com/Naren-Karthick/Swasthya-AI)
 [![Tests](https://img.shields.io/badge/tests-20%2F20%20passing-teal.svg)](https://github.com/Naren-Karthick/Swasthya-AI)
-[![Database](https://img.shields.io/badge/database-npoint.io%20cloud%20sync-blue.svg)](https://api.npoint.io/ead356d4d55965c0a760)
 [![Languages](https://img.shields.io/badge/languages-8%20Indian%20Languages-indigo.svg)](https://github.com/Naren-Karthick/Swasthya-AI)
 [![Privacy](https://img.shields.io/badge/privacy-Anonymous%20Demo%20%2B%20Auth-green.svg)](https://github.com/Naren-Karthick/Swasthya-AI)
 
