@@ -40,7 +40,6 @@ Swasthya AI is an **informational symptom-intake and urgency-stratification prot
 - **8 Indian Languages:** English, हिन्दी (Hindi), தமிழ் (Tamil), తెలుగు (Telugu), ಕನ್ನಡ (Kannada), മലയാളം (Malayalam), বাংলা (Bengali), and मराठी (Marathi).
 - **Progressive & Resilient Voice Intake:** Real-time Web Speech recognition with typed fallback, transcript review and editing before analysis, and strict audio resource cleanup.
 - **Doctor-Ready PDF Summary:** Standardized SBAR handoff report with one-click PDF generation and copy-to-clipboard functionality.
-- **Live npoint.io Cloud Database:** Multi-user cloud synchronization (`https://api.npoint.io/ead356d4d55965c0a760`) with resilient client-side caching fallback.
 - **Past Triage Dashboard & Analytics:**
   - Acuity summary metrics (Total Screenings, Emergency, Moderate, and Routine Care counts).
   - Search past screenings by symptom keywords.
